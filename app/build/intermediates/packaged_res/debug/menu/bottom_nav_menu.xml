@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navDashboard"
+        android:title="Dashboard"
+        android:icon="@android:drawable/ic_menu_agenda" />
+
+    <item
+        android:id="@+id/navMap"
+        android:title="Map"
+        android:icon="@android:drawable/ic_menu_mapmode" />
+
+    <item
+        android:id="@+id/navGroups"
+        android:title="Groups"
+        android:icon="@android:drawable/ic_menu_share" />
+
+</menu>

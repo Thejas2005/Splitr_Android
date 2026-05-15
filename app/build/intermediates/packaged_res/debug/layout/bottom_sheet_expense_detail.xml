@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:background="@drawable/bg_bottom_sheet"
+    android:padding="24dp" android:paddingBottom="36dp">
+
+  <!-- Handle -->
+  <View android:layout_width="40dp" android:layout_height="4dp"
+      android:background="@drawable/drag_handle" android:layout_gravity="center_horizontal"
+      android:layout_marginBottom="20dp"/>
+
+  <!-- Amount (hero) -->
+  <TextView android:id="@+id/tvDetailAmount"
+      android:layout_width="wrap_content" android:layout_height="wrap_content"
+      android:textColor="@color/blue_bright" android:textSize="34sp" android:textStyle="bold"
+      android:layout_marginBottom="4dp"/>
+
+  <!-- Title -->
+  <TextView android:id="@+id/tvDetailTitle"
+      android:layout_width="wrap_content" android:layout_height="wrap_content"
+      android:textColor="@color/text" android:textSize="18sp" android:textStyle="bold"
+      android:layout_marginBottom="16dp"/>
+
+  <!-- Meta grid -->
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="horizontal" android:layout_marginBottom="10dp">
+
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical"
+        android:background="@drawable/bg_card" android:padding="12dp"
+        android:layout_marginEnd="8dp">
+      <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:text="TYPE" android:textColor="@color/muted" android:textSize="10sp"/>
+      <TextView android:id="@+id/tvDetailType"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:textColor="@color/text" android:textSize="14sp" android:textStyle="bold"
+          android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical"
+        android:background="@drawable/bg_card" android:padding="12dp">
+      <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:text="SPLIT" android:textColor="@color/muted" android:textSize="10sp"/>
+      <TextView android:id="@+id/tvDetailSplit"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:textColor="@color/text" android:textSize="14sp" android:textStyle="bold"
+          android:layout_marginTop="2dp"/>
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Group -->
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:background="@drawable/bg_card" android:padding="12dp"
+      android:layout_marginBottom="10dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="GROUP" android:textColor="@color/muted" android:textSize="10sp"/>
+    <TextView android:id="@+id/tvDetailGroup"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="@color/text" android:textSize="14sp" android:layout_marginTop="2dp"/>
+  </LinearLayout>
+
+  <!-- Location -->
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:background="@drawable/bg_card" android:padding="12dp"
+      android:layout_marginBottom="16dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="LOCATION" android:textColor="@color/muted" android:textSize="10sp"/>
+    <TextView android:id="@+id/tvDetailLocation"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="@color/text" android:textSize="13sp" android:layout_marginTop="2dp"/>
+  </LinearLayout>
+
+  <!-- Splits section -->
+  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+      android:text="SPLIT DETAILS" android:textColor="@color/muted" android:textSize="10sp"
+      android:letterSpacing="0.1" android:layout_marginBottom="8dp"/>
+  <LinearLayout android:id="@+id/llDetailSplits"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:layout_marginBottom="20dp"/>
+
+  <!-- Buttons -->
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="horizontal">
+    <Button android:id="@+id/btnDetailDelete"
+        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+        android:text="Delete" android:textColor="#fca5a5"
+        android:background="@drawable/bg_btn_secondary"
+        android:layout_marginEnd="8dp" android:stateListAnimator="@null"/>
+    <Button android:id="@+id/btnDetailClose"
+        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+        android:text="Close" android:textColor="@color/white"
+        android:background="@drawable/bg_btn_primary"
+        android:stateListAnimator="@null"/>
+  </LinearLayout>
+
+</LinearLayout>

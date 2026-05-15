@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:padding="20dp" android:paddingBottom="32dp">
+
+    <!-- Handle -->
+    <View android:layout_width="40dp" android:layout_height="4dp"
+        android:background="@drawable/drag_handle" android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="14dp"/>
+
+    <!-- Title -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="🧾  Split by Bill Items"
+        android:textColor="@color/text" android:textSize="18sp" android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- ITEMS section label -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="ITEMS" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="8dp"/>
+
+    <!-- Dynamic bill item rows -->
+    <LinearLayout android:id="@+id/llBillItems"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:layout_marginBottom="6dp"/>
+
+    <Button android:id="@+id/btnAddBillItem"
+        android:layout_width="match_parent" android:layout_height="40dp"
+        android:text="+ Add Item" android:textColor="@color/blue_bright"
+        android:background="@drawable/bg_btn_secondary" android:stateListAnimator="@null"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- EXTRAS: Tax + Service -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="EXTRAS" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="8dp"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="16dp">
+      <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+          android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="8dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Tax %" android:textColor="@color/muted" android:textSize="11sp"
+            android:layout_marginBottom="4dp"/>
+        <EditText android:id="@+id/etBillTax"
+            android:layout_width="match_parent" android:layout_height="42dp"
+            android:background="@drawable/bg_input" android:paddingHorizontal="10dp"
+            android:inputType="numberDecimal" android:hint="0" android:textColor="@color/text"
+            android:textColorHint="@color/muted" android:textSize="14sp"/>
+      </LinearLayout>
+      <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+          android:layout_weight="1" android:orientation="vertical">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Service %" android:textColor="@color/muted" android:textSize="11sp"
+            android:layout_marginBottom="4dp"/>
+        <EditText android:id="@+id/etBillService"
+            android:layout_width="match_parent" android:layout_height="42dp"
+            android:background="@drawable/bg_input" android:paddingHorizontal="10dp"
+            android:inputType="numberDecimal" android:hint="0" android:textColor="@color/text"
+            android:textColorHint="@color/muted" android:textSize="14sp"/>
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- SUMMARY -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="SUMMARY" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="8dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:background="@drawable/bg_card"
+        android:padding="12dp" android:layout_marginBottom="16dp">
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Subtotal"
+            android:textColor="@color/text" android:textSize="13sp"/>
+        <TextView android:id="@+id/tvBillSubtotal"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/text" android:textSize="13sp"/>
+      </LinearLayout>
+      <TextView android:id="@+id/tvBillTaxLine"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:textColor="@color/muted" android:textSize="12sp" android:layout_marginTop="4dp"/>
+      <TextView android:id="@+id/tvBillServiceLine"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:textColor="@color/muted" android:textSize="12sp" android:layout_marginTop="2dp"/>
+      <View android:layout_width="match_parent" android:layout_height="1dp"
+          android:background="@color/border" android:layout_marginVertical="8dp"/>
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:orientation="horizontal">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Total"
+            android:textColor="@color/text" android:textSize="15sp" android:textStyle="bold"/>
+        <TextView android:id="@+id/tvBillGrandTotal"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/blue_bright" android:textSize="15sp" android:textStyle="bold"/>
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- PER PERSON -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="EACH PERSON OWES" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="8dp"/>
+    <LinearLayout android:id="@+id/llBillPersonTotals"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:layout_marginBottom="20dp"/>
+
+    <!-- Buttons -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal">
+      <Button android:id="@+id/btnCancelBill"
+          android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+          android:text="Cancel" android:textColor="@color/muted"
+          android:background="@drawable/bg_btn_secondary"
+          android:layout_marginEnd="8dp" android:stateListAnimator="@null"/>
+      <Button android:id="@+id/btnApplyBill"
+          android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="2"
+          android:text="Apply to Dutch Split" android:textColor="@color/white"
+          android:background="@drawable/bg_btn_primary"
+          android:textStyle="bold" android:stateListAnimator="@null"/>
+    </LinearLayout>
+
+  </LinearLayout>
+</ScrollView>

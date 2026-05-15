@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:padding="24dp" android:paddingBottom="36dp">
+
+    <!-- Handle -->
+    <View android:layout_width="40dp" android:layout_height="4dp"
+        android:background="@drawable/drag_handle" android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Group name -->
+    <TextView android:id="@+id/tvGroupDetailTitle"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="@color/text" android:textSize="22sp" android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- MEMBERS -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="MEMBERS" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="10dp"/>
+    <LinearLayout android:id="@+id/llGroupMembers"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:layout_marginBottom="14dp"/>
+
+    <!-- Add member -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="20dp">
+      <EditText android:id="@+id/etAddGroupMember"
+          android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+          android:background="@drawable/bg_input" android:paddingHorizontal="12dp"
+          android:hint="Username or guest name" android:textColor="@color/text"
+          android:textColorHint="@color/muted" android:textSize="14sp"
+          android:singleLine="true" android:layout_marginEnd="8dp"/>
+      <Button android:id="@+id/btnAddGroupMember"
+          android:layout_width="wrap_content" android:layout_height="44dp"
+          android:text="Add" android:textColor="@color/white"
+          android:background="@drawable/bg_button_primary"
+          android:paddingHorizontal="16dp" android:stateListAnimator="@null"/>
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/border" android:layout_marginBottom="16dp"/>
+
+    <!-- GROUP EXPENSES -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="GROUP EXPENSES" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="10dp"/>
+    <LinearLayout android:id="@+id/llGroupExpenses"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:layout_marginBottom="20dp"/>
+
+    <!-- Divider -->
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/border" android:layout_marginBottom="16dp"/>
+
+    <!-- PENDING BALANCES -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="PENDING BALANCES" android:textColor="@color/muted" android:textSize="10sp"
+        android:letterSpacing="0.1" android:layout_marginBottom="10dp"/>
+    <LinearLayout android:id="@+id/llGroupBalances"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:layout_marginBottom="20dp"/>
+
+    <Button android:id="@+id/btnGroupDetailClose"
+        android:layout_width="match_parent" android:layout_height="48dp"
+        android:text="Close" android:textColor="@color/muted"
+        android:background="@drawable/bg_btn_secondary"
+        android:stateListAnimator="@null"/>
+  </LinearLayout>
+</ScrollView>

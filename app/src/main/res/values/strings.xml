@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Splitr</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_map">Map</string>
+    <string name="nav_groups">Groups</string>
+    <string name="sign_in">Sign In</string>
+    <string name="register">Register</string>
+    <string name="create_account">Create Account</string>
+    <string name="settle">Settle</string>
+    <string name="save_expense">Save Expense</string>
+    <string name="cancel">Cancel</string>
+    <string name="personal_no_group">Personal (no group)</string>
+    <string name="tap_map_hint">Tap the map to pin expense location</string>
+    <string name="no_location">No location selected</string>
+</resources>

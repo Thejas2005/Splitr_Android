@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#080C14</color>
+    <color name="blue">#3B82F6</color>
+    <color name="blue_bright">#60A5FA</color>
+    <color name="blue_dark">#1D4ED8</color>
+    <color name="border">#1E2D42</color>
+    <color name="green">#22C55E</color>
+    <color name="muted">#64748B</color>
+    <color name="orange">#F97316</color>
+    <color name="purple">#A855F7</color>
+    <color name="red">#EF4444</color>
+    <color name="surface">#0E1520</color>
+    <color name="surface2">#141E2E</color>
+    <color name="text">#E2E8F0</color>
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <dimen name="button_radius">10dp</dimen>
+    <dimen name="card_padding">14dp</dimen>
+    <dimen name="card_radius">12dp</dimen>
+    <dimen name="input_height">48dp</dimen>
+    <dimen name="input_radius">10dp</dimen>
+    <dimen name="screen_padding">16dp</dimen>
+    <dimen name="text_body">15sp</dimen>
+    <dimen name="text_small">12sp</dimen>
+    <dimen name="text_title">24sp</dimen>
+    <string name="app_name">Splitr</string>
+    <string name="cancel">Cancel</string>
+    <string name="create_account">Create Account</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_groups">Groups</string>
+    <string name="nav_map">Map</string>
+    <string name="no_location">No location selected</string>
+    <string name="personal_no_group">Personal (no group)</string>
+    <string name="register">Register</string>
+    <string name="save_expense">Save Expense</string>
+    <string name="settle">Settle</string>
+    <string name="sign_in">Sign In</string>
+    <string name="tap_map_hint">Tap the map to pin expense location</string>
+    <style name="BlueButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/blue_bright</item>
+    </style>
+    <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_bottom_sheet</item>
+    </style>
+    <style name="BottomSheetTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:background">@color/transparent</item>
+    </style>
+    <style name="DarkDialogTheme" parent="Theme.MaterialComponents.Dialog">
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:textColorPrimary">@color/text</item>
+        <item name="android:textColorSecondary">@color/muted</item>
+        <item name="colorPrimary">@color/blue</item>
+        <item name="buttonBarPositiveButtonStyle">@style/BlueButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/BlueButtonStyle</item>
+    </style>
+    <style name="FieldLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/muted</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+    </style>
+    <style name="Theme.Splitr" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/blue</item>
+        <item name="colorPrimaryVariant">@color/blue_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/blue_bright</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text</item>
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+</resources>

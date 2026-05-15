@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingBottom="72dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/surface"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/tvUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hey there 👋"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/text"/>
+
+            <!-- Balance cards row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:weightSum="3">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_card"
+                    android:layout_marginEnd="6dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="NET" android:textSize="10sp" android:textColor="@color/muted"/>
+                    <TextView android:id="@+id/tvNetBalance"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
+                        android:textColor="@color/green"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_card"
+                    android:layout_marginEnd="6dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="I OWE" android:textSize="10sp" android:textColor="@color/muted"/>
+                    <TextView android:id="@+id/tvIOwe"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
+                        android:textColor="@color/red"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="80dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/bg_card">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="OWED" android:textSize="10sp" android:textColor="@color/muted"/>
+                    <TextView android:id="@+id/tvOwedToMe"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
+                        android:textColor="@color/green"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Sub-tabs -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:orientation="horizontal"
+            android:background="@color/surface2">
+
+            <TextView android:id="@+id/tabExpenses"
+                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                android:gravity="center" android:text="Expenses" android:textSize="13sp"
+                android:textColor="@color/blue" android:background="@drawable/selector_tab_bottom"
+                android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/tabIOwe"
+                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                android:gravity="center" android:text="I Owe" android:textSize="13sp"
+                android:textColor="@color/muted" android:background="@drawable/selector_tab_bottom"
+                android:clickable="true" android:focusable="true"/>
+            <TextView android:id="@+id/tabOwed"
+                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                android:gravity="center" android:text="Owed to Me" android:textSize="13sp"
+                android:textColor="@color/muted" android:background="@drawable/selector_tab_bottom"
+                android:clickable="true" android:focusable="true"/>
+        </LinearLayout>
+
+        <!-- Content panes -->
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvExpenses"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:padding="12dp" android:clipToPadding="false"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvIOwe"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:padding="12dp" android:clipToPadding="false"
+                android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvOwed"
+                android:layout_width="match_parent" android:layout_height="match_parent"
+                android:padding="12dp" android:clipToPadding="false"
+                android:visibility="gone"/>
+        </FrameLayout>
+
+        <!-- pane containers wired in Activity code via visibility -->
+        <View android:id="@+id/paneExpenses" android:layout_width="0dp" android:layout_height="0dp"/>
+        <View android:id="@+id/paneIOwe"     android:layout_width="0dp" android:layout_height="0dp"/>
+        <View android:id="@+id/paneOwed"     android:layout_width="0dp" android:layout_height="0dp"/>
+    </LinearLayout>
+
+    <!-- FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="80dp"
+        app:backgroundTint="@color/blue"
+        android:src="@drawable/ic_add"
+        app:tint="@color/white"/>
+
+    <!-- Bottom Nav -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/surface"
+        app:menu="@menu/bottom_nav"
+        app:itemIconTint="@color/nav_icon_color"
+        app:itemTextColor="@color/nav_icon_color"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Splitr — Android App
 
 Native Android (Java) client for the Splitr expense-splitting backend.
@@ -185,3 +186,7 @@ implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
 - **Passwords** are sent in plain text matching the existing backend (`auth.py`). Add hashing (bcrypt) on both sides before production use.
 - `usesCleartextTraffic="true"` is set in the manifest for local HTTP dev. Remove this and use HTTPS for production.
 - The `10.0.2.2` IP is Android's emulator alias for your host machine's localhost. Change to your LAN IP for physical device testing.
+=======
+# Splitr_Android
+Splitr
+>>>>>>> 0ee5ab4dc21124a61b6fadccfcf9d4502b8f0273

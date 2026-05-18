@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.splitr.app-mergeDebugResources-34:/values-pa/values-pa.xml",
+            "outputFile": "com.splitr.app-mergeDebugResources-40:/values-pa/values-pa.xml",
             "map": [
                 {
                     "source": "C:\\Users\\theja\\.gradle\\caches\\9.0-milestone-1\\transforms\\8b5f816db997200dcc9166acd3d887cf\\transformed\\jetified-play-services-basement-18.1.0\\res\\values-pa\\values.xml",

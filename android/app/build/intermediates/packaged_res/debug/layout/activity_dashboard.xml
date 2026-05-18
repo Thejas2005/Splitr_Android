@@ -6,6 +6,34 @@
     android:layout_height="match_parent"
     android:background="@color/bg">
 
+    <!-- Offline banner -->
+    <TextView
+        android:id="@+id/tvOfflineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📵 Offline — showing cached data"
+        android:textColor="#fbbf24"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:background="#1a1200"
+        android:padding="10dp"
+        android:visibility="gone"
+        android:elevation="4dp"/>
+
+    <!-- Pending sync banner -->
+    <TextView
+        android:id="@+id/tvPendingBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#34d399"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:background="#001a0d"
+        android:padding="10dp"
+        android:visibility="gone"
+        android:elevation="4dp"
+        android:layout_marginTop="38dp"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -37,118 +65,221 @@
                 android:layout_marginTop="16dp"
                 android:weightSum="3">
 
+                <!-- Net balance card -->
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:background="@drawable/bg_card"
+                    android:padding="10dp"
                     android:layout_marginEnd="6dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="NET" android:textSize="10sp" android:textColor="@color/muted"/>
-                    <TextView android:id="@+id/tvNetBalance"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
-                        android:textColor="@color/green"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="NET"
+                        android:textSize="9sp"
+                        android:textColor="@color/muted"
+                        android:letterSpacing="0.1"/>
+                    <TextView
+                        android:id="@+id/tvNetBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹0"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/green"
+                        android:layout_marginTop="2dp"/>
                 </LinearLayout>
 
+                <!-- I Owe card -->
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
                     android:background="@drawable/bg_card"
+                    android:padding="10dp"
                     android:layout_marginEnd="6dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="I OWE" android:textSize="10sp" android:textColor="@color/muted"/>
-                    <TextView android:id="@+id/tvIOwe"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
-                        android:textColor="@color/red"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="I OWE"
+                        android:textSize="9sp"
+                        android:textColor="@color/muted"
+                        android:letterSpacing="0.1"/>
+                    <TextView
+                        android:id="@+id/tvIOwe"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹0"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/red"
+                        android:layout_marginTop="2dp"/>
+                    <!-- Count badge -->
+                    <TextView
+                        android:id="@+id/tvIOweCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 people"
+                        android:textSize="10sp"
+                        android:textColor="@color/muted"
+                        android:layout_marginTop="2dp"/>
                 </LinearLayout>
 
+                <!-- Owed to me card -->
                 <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:background="@drawable/bg_card">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="OWED" android:textSize="10sp" android:textColor="@color/muted"/>
-                    <TextView android:id="@+id/tvOwedToMe"
-                        android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="₹0" android:textSize="18sp" android:textStyle="bold"
-                        android:textColor="@color/green"/>
+                    android:background="@drawable/bg_card"
+                    android:padding="10dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OWED"
+                        android:textSize="9sp"
+                        android:textColor="@color/muted"
+                        android:letterSpacing="0.1"/>
+                    <TextView
+                        android:id="@+id/tvOwedToMe"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₹0"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/green"
+                        android:layout_marginTop="2dp"/>
+                    <!-- Count badge -->
+                    <TextView
+                        android:id="@+id/tvOwedCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 people"
+                        android:textSize="10sp"
+                        android:textColor="@color/muted"
+                        android:layout_marginTop="2dp"/>
                 </LinearLayout>
+
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Sub-tabs -->
+        <!-- Sub-tabs with expense count -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:orientation="horizontal"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:background="@color/surface2">
 
-            <TextView android:id="@+id/tabExpenses"
-                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-                android:gravity="center" android:text="Expenses" android:textSize="13sp"
-                android:textColor="@color/blue" android:background="@drawable/selector_tab_bottom"
-                android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/tabIOwe"
-                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-                android:gravity="center" android:text="I Owe" android:textSize="13sp"
-                android:textColor="@color/muted" android:background="@drawable/selector_tab_bottom"
-                android:clickable="true" android:focusable="true"/>
-            <TextView android:id="@+id/tabOwed"
-                android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-                android:gravity="center" android:text="Owed to Me" android:textSize="13sp"
-                android:textColor="@color/muted" android:background="@drawable/selector_tab_bottom"
-                android:clickable="true" android:focusable="true"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tabExpenses"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Expenses"
+                    android:textSize="13sp"
+                    android:textColor="@color/blue_bright"
+                    android:background="@drawable/selector_tab_bottom"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/tabIOwe"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="I Owe"
+                    android:textSize="13sp"
+                    android:textColor="@color/muted"
+                    android:background="@drawable/selector_tab_bottom"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/tabOwed"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Owed to Me"
+                    android:textSize="13sp"
+                    android:textColor="@color/muted"
+                    android:background="@drawable/selector_tab_bottom"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- Summary bar — shown under active tab -->
+            <TextView
+                android:id="@+id/tvSummaryBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="11sp"
+                android:textColor="@color/muted"
+                android:gravity="center"
+                android:padding="6dp"
+                android:background="@color/bg"
+                android:visibility="gone"/>
         </LinearLayout>
 
         <!-- Content panes -->
-        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvExpenses"
-                android:layout_width="match_parent" android:layout_height="match_parent"
-                android:padding="12dp" android:clipToPadding="false"/>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:clipToPadding="false"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvIOwe"
-                android:layout_width="match_parent" android:layout_height="match_parent"
-                android:padding="12dp" android:clipToPadding="false"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:clipToPadding="false"
                 android:visibility="gone"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvOwed"
-                android:layout_width="match_parent" android:layout_height="match_parent"
-                android:padding="12dp" android:clipToPadding="false"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="12dp"
+                android:clipToPadding="false"
                 android:visibility="gone"/>
         </FrameLayout>
 
-        <!-- pane containers wired in Activity code via visibility -->
-        <View android:id="@+id/paneExpenses" android:layout_width="0dp" android:layout_height="0dp"/>
-        <View android:id="@+id/paneIOwe"     android:layout_width="0dp" android:layout_height="0dp"/>
-        <View android:id="@+id/paneOwed"     android:layout_width="0dp" android:layout_height="0dp"/>
     </LinearLayout>
 
-    <!-- FAB -->
+    <!-- FAB — raised higher with larger bottom margin -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="80dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="88dp"
         app:backgroundTint="@color/blue"
         android:src="@drawable/ic_add"
         app:tint="@color/white"/>
 
-    <!-- Bottom Nav -->
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"

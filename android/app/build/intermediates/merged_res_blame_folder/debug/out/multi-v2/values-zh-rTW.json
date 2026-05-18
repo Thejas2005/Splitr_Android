@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.splitr.app-mergeDebugResources-34:/values-zh-rTW/values-zh-rTW.xml",
+            "outputFile": "com.splitr.app-mergeDebugResources-40:/values-zh-rTW/values-zh-rTW.xml",
             "map": [
                 {
                     "source": "C:\\Users\\theja\\.gradle\\caches\\9.0-milestone-1\\transforms\\7ff9ee7482a8dc9b9850645cff3f693b\\transformed\\appcompat-1.6.1\\res\\values-zh-rTW\\values-zh-rTW.xml",

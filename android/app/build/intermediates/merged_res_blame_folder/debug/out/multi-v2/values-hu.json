@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.splitr.app-mergeDebugResources-34:/values-hu/values-hu.xml",
+            "outputFile": "com.splitr.app-mergeDebugResources-40:/values-hu/values-hu.xml",
             "map": [
                 {
                     "source": "C:\\Users\\theja\\.gradle\\caches\\9.0-milestone-1\\transforms\\4428070d35b5908e2590b1f7977b0c86\\transformed\\core-1.9.0\\res\\values-hu\\values-hu.xml",

@@ -1,6 +1,7 @@
 package com.splitr.app.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,11 +42,13 @@ import retrofit2.Response;
 public class DashboardActivity extends AppCompatActivity {
 
     private SessionManager session;
+    private SharedPreferences balancePrefs;
 
     private TextView tvUsername, tvNetBalance, tvIOwe, tvOwedToMe;
     private TextView tvIOweCount, tvOwedCount;
     private TextView tabExpenses, tabIOwe, tabOwed;
     private TextView tvOfflineBanner, tvPendingBanner, tvSummaryBar;
+    private TextView btnLogout;
     private RecyclerView rvExpenses, rvIOwe, rvOwed;
     private ExpenseAdapter expenseAdapter;
     private SplitItemAdapter iOweAdapter, owedAdapter;
@@ -65,6 +68,7 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
         session = new SessionManager(this);
+        balancePrefs = getSharedPreferences("balance_cache_" + session.getUserId(), MODE_PRIVATE);
         if (!session.isLoggedIn()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
@@ -77,6 +81,20 @@ public class DashboardActivity extends AppCompatActivity {
         setupBottomNav();
         fabAdd.setOnClickListener(v -> AddExpenseActivity.launch(this, null, null));
         tvUsername.setText("Hey, " + session.getUsername() + " 👋");
+
+        btnLogout.setOnClickListener(v ->
+                new androidx.appcompat.app.AlertDialog.Builder(this, R.style.DarkDialogTheme)
+                        .setTitle("Log Out")
+                        .setMessage("Are you sure you want to log out?")
+                        .setPositiveButton("Log Out", (d, w) -> {
+                            session.clearSession();
+                            Intent intent = new Intent(this, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                            finish();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show());
     }
 
     @Override
@@ -105,6 +123,7 @@ public class DashboardActivity extends AppCompatActivity {
         fabAdd          = findViewById(R.id.fabAdd);
         tvOfflineBanner = findViewById(R.id.tvOfflineBanner);
         tvPendingBanner = findViewById(R.id.tvPendingBanner);
+        btnLogout       = findViewById(R.id.btnLogout);
     }
 
     private void setupRecyclers() {
@@ -176,6 +195,7 @@ public class DashboardActivity extends AppCompatActivity {
     private void loadData() {
         checkPendingSync();
         loadExpenses();
+        restoreCachedBalances();
         loadBalances();
     }
 
@@ -276,7 +296,7 @@ public class DashboardActivity extends AppCompatActivity {
     // ─── Balances ────────────────────────────────────────────────────────────
 
     private void loadBalances() {
-        if (!NetworkUtils.isOnline(this)) return;
+        if (!NetworkUtils.isOnline(this)) return; // cached data already shown by restoreCachedBalances()
 
         RetrofitClient.getService().getMyBalances(session.getUserId())
                 .enqueue(new Callback<MyBalances>() {
@@ -284,6 +304,9 @@ public class DashboardActivity extends AppCompatActivity {
                     public void onResponse(Call<MyBalances> call, Response<MyBalances> resp) {
                         if (!resp.isSuccessful() || resp.body() == null) return;
                         MyBalances b = resp.body();
+
+                        // Persist to cache for offline use
+                        saveCachedBalances(b);
 
                         // Totals
                         tvIOwe.setText(String.format(Locale.getDefault(), "₹%.2f", b.totalIOwe));
@@ -318,6 +341,45 @@ public class DashboardActivity extends AppCompatActivity {
                         toast("Failed to load balances");
                     }
                 });
+    }
+
+    private void saveCachedBalances(MyBalances b) {
+        SharedPreferences.Editor ed = balancePrefs.edit();
+        ed.putFloat("net",       (float) b.net);
+        ed.putFloat("i_owe",     (float) b.totalIOwe);
+        ed.putFloat("owed_me",   (float) b.totalOwedToMe);
+        ed.putInt  ("i_owe_cnt", b.iOwe     != null ? b.iOwe.size()     : 0);
+        ed.putInt  ("owed_cnt",  b.owedToMe != null ? b.owedToMe.size() : 0);
+        ed.apply();
+    }
+
+    private void restoreCachedBalances() {
+        if (!balancePrefs.contains("net")) return; // no cache yet
+
+        float net     = balancePrefs.getFloat("net",       0f);
+        float iOwe    = balancePrefs.getFloat("i_owe",     0f);
+        float owedMe  = balancePrefs.getFloat("owed_me",   0f);
+        int   iOweCnt = balancePrefs.getInt  ("i_owe_cnt", 0);
+        int   owedCnt = balancePrefs.getInt  ("owed_cnt",  0);
+
+        tvIOwe.setText(String.format(Locale.getDefault(), "₹%.2f", (double) iOwe));
+        tvOwedToMe.setText(String.format(Locale.getDefault(), "₹%.2f", (double) owedMe));
+
+        String netText = String.format(Locale.getDefault(), "₹%.2f", Math.abs((double) net));
+        if (net >= 0) {
+            tvNetBalance.setText("+" + netText);
+            tvNetBalance.setTextColor(getColor(R.color.green));
+        } else {
+            tvNetBalance.setText("-" + netText);
+            tvNetBalance.setTextColor(getColor(R.color.red));
+        }
+
+        iOweCount = iOweCnt;
+        owedCount = owedCnt;
+        tvIOweCount.setText(iOweCnt + " person" + (iOweCnt == 1 ? "" : "s"));
+        tvOwedCount.setText(owedCnt + " person" + (owedCnt == 1 ? "" : "s"));
+
+        updateSummaryBar();
     }
 
     // ─── Expense Detail Popup ────────────────────────────────────────────────

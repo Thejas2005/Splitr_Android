@@ -1,11 +1,11 @@
 [
     {
-        "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_input.xml.flat",
-        "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_input.xml"
-    },
-    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_activity_group.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\activity_group.xml"
+    },
+    {
+        "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_input.xml.flat",
+        "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_input.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_activity_map.xml.flat",
@@ -14,6 +14,10 @@
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_btn_primary.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_btn_primary.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_item_member_chip.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/item_member_chip.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_item_cluster_expense.xml.flat",
@@ -28,6 +32,10 @@
         "source": "com.splitr.app-main-44:/layout/activity_add_expense_v2.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/drawable_bg_button_primary.xml.flat",
+        "source": "com.splitr.app-main-44:/drawable/bg_button_primary.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_bottom_sheet_expense_detail.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\bottom_sheet_expense_detail.xml"
     },
@@ -40,16 +48,36 @@
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\activity_dashboard.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/drawable_ic_zoom_in.xml.flat",
+        "source": "com.splitr.app-main-44:/drawable/ic_zoom_in.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/drawable_ic_zoom_out.xml.flat",
+        "source": "com.splitr.app-main-44:/drawable/ic_zoom_out.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_selector_tab.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\selector_tab.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_activity_map.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/activity_map.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_item_split.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\item_split.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/layout_activity_login.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/activity_login.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_item_split_row.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\item_split_row.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_item_group.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/item_group.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_item_bill_person_total.xml.flat",
@@ -64,6 +92,10 @@
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\ic_add.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/layout_item_bill_row.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/item_bill_row.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_pill_muted.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_pill_muted.xml"
     },
@@ -74,6 +106,10 @@
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_card.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_card.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_bottom_sheet_group_detail.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/bottom_sheet_group_detail.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_item_member_chip.xml.flat",
@@ -92,6 +128,14 @@
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_logo.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/drawable_bg_logo.xml.flat",
+        "source": "com.splitr.app-main-44:/drawable/bg_logo.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_activity_add_expense.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/activity_add_expense.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_ic_nav_dashboard.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\ic_nav_dashboard.xml"
     },
@@ -106,6 +150,10 @@
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_ic_logo.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\ic_logo.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/layout_activity_dashboard.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/activity_dashboard.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_bottom_sheet_cluster.xml.flat",
@@ -156,6 +204,10 @@
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_btn_secondary.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/layout_item_balance_row.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/item_balance_row.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_drag_handle.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\drag_handle.xml"
     },
@@ -180,12 +232,20 @@
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\item_group_member_row.xml"
     },
     {
+        "merged": "com.splitr.app-merged_res-42:/layout_bottom_sheet_bill_splitter.xml.flat",
+        "source": "com.splitr.app-main-44:/layout/bottom_sheet_bill_splitter.xml"
+    },
+    {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\layout_bottom_sheet_bill_splitter.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\layout\\bottom_sheet_bill_splitter.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_bg_tab_bar.xml.flat",
         "source": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-main-44:\\drawable\\bg_tab_bar.xml"
+    },
+    {
+        "merged": "com.splitr.app-merged_res-42:/drawable_bg_btn_primary.xml.flat",
+        "source": "com.splitr.app-main-44:/drawable/bg_btn_primary.xml"
     },
     {
         "merged": "C:\\Users\\theja\\.gradle\\daemon\\9.0-milestone-1\\com.splitr.app-merged_res-42:\\drawable_ic_nav_map.xml.flat",

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -20,6 +21,9 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import com.google.android.flexbox.FlexboxLayout;
+import com.google.android.flexbox.FlexWrap;
+import com.google.android.flexbox.FlexDirection;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,6 +53,13 @@ import com.splitr.app.utils.SessionManager;
 import com.splitr.app.utils.SyncManager;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -75,7 +86,15 @@ public class AddExpenseActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocation;
     private final Gson gson = new Gson();
 
+    private static final String PLACES_API_KEY = "AIzaSyBd3gQ7AzQpYQQDvpGYNuD-ux-pTJr1Qlo";
+    private final OkHttpClient httpClient = new OkHttpClient();
+    private final Handler locationSearchHandler = new Handler(android.os.Looper.getMainLooper());
+    private Runnable locationSearchRunnable;
+    private ArrayAdapter<String> locationSuggestionAdapter;
+    private final java.util.Map<String, String> locationPlaceIdMap = new java.util.LinkedHashMap<>();
+
     private Double pickedLat, pickedLng;
+    private Double fallbackLat, fallbackLng; // current location used if user picks nothing
     private String pickedLocationName = null;
 
     private List<Map<String, Object>> allUsers = new ArrayList<>();
@@ -83,7 +102,8 @@ public class AddExpenseActivity extends AppCompatActivity {
     private final List<BillItem>    billItems  = new ArrayList<>();
 
     // ─── Views ────────────────────────────────────────────────────────────────
-    private EditText          etAmount, etDescription, etLocationSearch;
+    private EditText          etAmount, etDescription;
+    private AutoCompleteTextView etLocationSearch;
     private AutoCompleteTextView etMemberInput;
     private TextView          tvLocation;
     private Button            btnClearLocation, btnUseCurrentLocation, btnPickOnMap;
@@ -99,6 +119,7 @@ public class AddExpenseActivity extends AppCompatActivity {
 
         session       = new SessionManager(this);
         fusedLocation = LocationServices.getFusedLocationProviderClient(this);
+        fetchFallbackLocation();
 
         // Location passed from map screen
         if (getIntent().hasExtra(EXTRA_LAT)) {
@@ -142,23 +163,52 @@ public class AddExpenseActivity extends AppCompatActivity {
     private void setupLocationSection() {
         updateLocationDisplay();
 
+        // Init autocomplete adapter
+        locationSuggestionAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, new java.util.ArrayList<>());
+        etLocationSearch.setAdapter(locationSuggestionAdapter);
+        etLocationSearch.setThreshold(1);
+
         // If launched from map with a location, try reverse geocode immediately
         if (pickedLat != null) reverseGeocode(pickedLat, pickedLng);
 
-        // Search bar typing
+        // Search bar typing — trigger autocomplete after 300 ms
         etLocationSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
             @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
                 btnClearLocation.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                if (locationSearchRunnable != null)
+                    locationSearchHandler.removeCallbacks(locationSearchRunnable);
+                String query = s.toString().trim();
+                if (query.length() >= 1) {
+                    locationSearchRunnable = () -> fetchLocationSuggestions(query);
+                    locationSearchHandler.postDelayed(locationSearchRunnable, 300);
+                } else {
+                    locationSuggestionAdapter.clear();
+                    locationSuggestionAdapter.notifyDataSetChanged();
+                }
             }
             @Override public void afterTextChanged(Editable s) {}
+        });
+
+        // User picks a suggestion from dropdown
+        etLocationSearch.setOnItemClickListener((parent, view, position, id) -> {
+            String selected = (String) parent.getItemAtPosition(position);
+            String placeId  = locationPlaceIdMap.get(selected);
+            etLocationSearch.setText(selected);
+            hideKeyboard(etLocationSearch);
+            if (placeId != null) resolveAndSetPlaceId(placeId, selected);
+            else searchLocation(selected);
         });
 
         // Search on keyboard "Search" / Enter
         etLocationSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH
                     || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-                searchLocation(etLocationSearch.getText().toString().trim());
+                String query = etLocationSearch.getText().toString().trim();
+                String placeId = locationPlaceIdMap.get(query);
+                if (placeId != null) resolveAndSetPlaceId(placeId, query);
+                else searchLocation(query);
                 hideKeyboard(etLocationSearch);
                 return true;
             }
@@ -168,6 +218,9 @@ public class AddExpenseActivity extends AppCompatActivity {
         btnClearLocation.setOnClickListener(v -> {
             etLocationSearch.setText("");
             pickedLat = null; pickedLng = null; pickedLocationName = null;
+            locationPlaceIdMap.clear();
+            locationSuggestionAdapter.clear();
+            locationSuggestionAdapter.notifyDataSetChanged();
             updateLocationDisplay();
         });
 
@@ -194,6 +247,79 @@ public class AddExpenseActivity extends AppCompatActivity {
         }
     }
 
+    /** Places Autocomplete — fires on every keystroke (debounced 300 ms) */
+    private void fetchLocationSuggestions(String input) {
+        new Thread(() -> {
+            try {
+                String locationBias = "";
+                if (pickedLat != null) {
+                    locationBias = "&location=" + pickedLat + "," + pickedLng + "&radius=50000";
+                }
+                String url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+                        + "?input=" + URLEncoder.encode(input, "UTF-8")
+                        + "&key=" + PLACES_API_KEY
+                        + "&language=en"
+                        + locationBias;
+
+                Request request = new Request.Builder().url(url).build();
+                try (okhttp3.Response response = httpClient.newCall(request).execute()) {
+                    if (!response.isSuccessful() || response.body() == null) return;
+                    String body = response.body().string();
+                    JSONObject json = new JSONObject(body);
+                    JSONArray predictions = json.optJSONArray("predictions");
+                    if (predictions == null) return;
+
+                    List<String> labels = new java.util.ArrayList<>();
+                    java.util.Map<String, String> newMap = new java.util.LinkedHashMap<>();
+                    for (int i = 0; i < Math.min(predictions.length(), 5); i++) {
+                        JSONObject pred = predictions.getJSONObject(i);
+                        String description = pred.optString("description", "");
+                        String placeId     = pred.optString("place_id", "");
+                        if (!description.isEmpty()) {
+                            labels.add(description);
+                            if (!placeId.isEmpty()) newMap.put(description, placeId);
+                        }
+                    }
+                    runOnUiThread(() -> {
+                        locationPlaceIdMap.clear();
+                        locationPlaceIdMap.putAll(newMap);
+                        locationSuggestionAdapter.clear();
+                        locationSuggestionAdapter.addAll(labels);
+                        locationSuggestionAdapter.notifyDataSetChanged();
+                        if (!labels.isEmpty()) etLocationSearch.showDropDown();
+                    });
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    /** Fetches lat/lng from place_id and sets the picked location */
+    private void resolveAndSetPlaceId(String placeId, String displayName) {
+        new Thread(() -> {
+            try {
+                String url = "https://maps.googleapis.com/maps/api/place/details/json"
+                        + "?place_id=" + placeId
+                        + "&fields=geometry,name,formatted_address"
+                        + "&key=" + PLACES_API_KEY;
+                Request request = new Request.Builder().url(url).build();
+                try (okhttp3.Response response = httpClient.newCall(request).execute()) {
+                    if (!response.isSuccessful() || response.body() == null) return;
+                    String body = response.body().string();
+                    JSONObject result = new JSONObject(body).optJSONObject("result");
+                    if (result == null) return;
+                    JSONObject location = result.getJSONObject("geometry").getJSONObject("location");
+                    pickedLat = location.getDouble("lat");
+                    pickedLng = location.getDouble("lng");
+                    pickedLocationName = result.optString("name", displayName);
+                    runOnUiThread(this::updateLocationDisplay);
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> toast("Could not resolve location"));
+            }
+        }).start();
+    }
+
+    /** Geocoder fallback when no placeId available */
     private void searchLocation(String query) {
         if (query.isEmpty()) return;
         new Thread(() -> {
@@ -230,6 +356,18 @@ public class AddExpenseActivity extends AppCompatActivity {
                 }
             } catch (IOException ignored) {}
         }).start();
+    }
+
+    /** Silently grabs device location on open — used as fallback if user never picks one. */
+    private void fetchFallbackLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+        fusedLocation.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                fallbackLat = location.getLatitude();
+                fallbackLng = location.getLongitude();
+            }
+        });
     }
 
     private void requestCurrentLocation() {
@@ -601,7 +739,7 @@ public class AddExpenseActivity extends AppCompatActivity {
             EditText etQty   = row.findViewById(R.id.etBillItemQty);
             EditText etPrice = row.findViewById(R.id.etBillItemPrice);
             Button   btnDel  = row.findViewById(R.id.btnDeleteBillItem);
-            LinearLayout llAssign = row.findViewById(R.id.llBillAssign);
+            FlexboxLayout llAssign = row.findViewById(R.id.llBillAssign);
 
             // ── FIX: set inputType programmatically on bill item fields too ──
             etQty.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -660,6 +798,11 @@ public class AddExpenseActivity extends AppCompatActivity {
                     }
                     render[0].run();
                 });
+                FlexboxLayout.LayoutParams chipLp = new FlexboxLayout.LayoutParams(
+                        FlexboxLayout.LayoutParams.WRAP_CONTENT,
+                        FlexboxLayout.LayoutParams.WRAP_CONTENT);
+                chipLp.setMargins(0, 0, 16, 12); // right + bottom gap between chips
+                chip.setLayoutParams(chipLp);
                 llAssign.addView(chip);
             }
             llItems.addView(row);
@@ -747,8 +890,10 @@ public class AddExpenseActivity extends AppCompatActivity {
     }
 
     private void savePersonalExpense(double amount, String desc) {
+        Double lat = pickedLat != null ? pickedLat : fallbackLat;
+        Double lng = pickedLng != null ? pickedLng : fallbackLng;
         ExpenseCreate req = new ExpenseCreate(
-                amount, desc, pickedLat, pickedLng, session.getUserId());
+                amount, desc, lat, lng, session.getUserId());
 
         if (NetworkUtils.isOnline(this)) {
             RetrofitClient.getService().addPersonalExpense(req)
@@ -774,7 +919,8 @@ public class AddExpenseActivity extends AppCompatActivity {
         new Thread(() -> {
             PendingExpense p = new PendingExpense();
             p.amount = amount; p.description = desc;
-            p.latitude = pickedLat; p.longitude = pickedLng;
+            p.latitude = pickedLat != null ? pickedLat : fallbackLat;
+            p.longitude = pickedLng != null ? pickedLng : fallbackLng;
             p.userId = session.getUserId();
             p.status = "pending"; p.retryCount = 0;
             p.createdAt = System.currentTimeMillis();
@@ -812,7 +958,7 @@ public class AddExpenseActivity extends AppCompatActivity {
                             int groupId = resp.body().groupId;
                             RetrofitClient.getService()
                                     .addGroupExpense(new GroupExpenseCreate(
-                                            groupId, amount, desc, pickedLat, pickedLng,
+                                            groupId, amount, desc, pickedLat != null ? pickedLat : fallbackLat, pickedLng != null ? pickedLng : fallbackLng,
                                             session.getUserId(), fType, fSplits))
                                     .enqueue(new Callback<GroupExpenseResponse>() {
                                         @Override public void onResponse(Call<GroupExpenseResponse> c,
@@ -844,7 +990,8 @@ public class AddExpenseActivity extends AppCompatActivity {
         new Thread(() -> {
             PendingExpense p = new PendingExpense();
             p.amount = amount; p.description = desc;
-            p.latitude = pickedLat; p.longitude = pickedLng;
+            p.latitude = pickedLat != null ? pickedLat : fallbackLat;
+            p.longitude = pickedLng != null ? pickedLng : fallbackLng;
             p.userId = session.getUserId();
             p.splitType  = splitType;
             p.splitsJson = splits != null ? gson.toJson(splits) : null;

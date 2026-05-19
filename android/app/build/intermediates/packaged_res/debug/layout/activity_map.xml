@@ -7,20 +7,22 @@
     android:background="@color/bg">
 
     <!-- Map fills entire screen -->
+
+    <!-- Search bar overlaid on top of map -->
     <fragment
         android:id="@+id/mapFragment"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
-    <!-- Search bar overlaid on top of map -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:orientation="horizontal"
         android:padding="12dp"
-        android:layout_marginTop="8dp">
+        android:paddingTop="48dp"
+        android:layout_marginTop="0dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -39,7 +41,7 @@
                 android:textSize="16sp"
                 android:layout_marginEnd="8dp"/>
 
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/etPlaceSearch"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -51,7 +53,10 @@
                 android:textSize="14sp"
                 android:singleLine="true"
                 android:imeOptions="actionSearch"
-                android:inputType="text"/>
+                android:inputType="text"
+                android:completionThreshold="2"
+                android:dropDownWidth="match_parent"
+                android:popupBackground="@color/surface2"/>
 
             <Button
                 android:id="@+id/btnClearSearch"
@@ -78,6 +83,11 @@
         app:itemTextColor="@color/nav_icon_color"/>
 
     <!-- Add expense FAB — raised above bottom nav -->
+
+    <!-- My location FAB -->
+
+    <!-- Zoom In FAB -->
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddExpense"
         android:layout_width="wrap_content"
@@ -85,20 +95,46 @@
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="88dp"
-        app:backgroundTint="@color/blue"
         android:src="@drawable/ic_add"
-        app:tint="@color/white"/>
+        app:backgroundTint="@color/blue"
+        app:tint="@color/white" />
 
-    <!-- My location FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMyLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="160dp"
+        android:src="@drawable/ic_my_location"
+        app:backgroundTint="@color/blue"
+        app:fabSize="mini" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabZoomIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
         android:layout_marginBottom="160dp"
         app:backgroundTint="@color/surface"
-        android:src="@drawable/ic_my_location"
-        app:fabSize="mini"/>
+        android:src="@drawable/ic_zoom_in"
+        app:fabSize="mini"
+        app:tint="@color/text"
+        android:contentDescription="Zoom in"/>
+
+    <!-- Zoom Out FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabZoomOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="100dp"
+        app:backgroundTint="@color/surface"
+        android:src="@drawable/ic_zoom_out"
+        app:fabSize="mini"
+        app:tint="@color/text"
+        android:contentDescription="Zoom out"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

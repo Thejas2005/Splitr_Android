@@ -3127,6 +3127,8 @@ drawable ic_nav_groups
 drawable ic_nav_map
 drawable ic_search_black_24
 drawable ic_tab_selector
+drawable ic_zoom_in
+drawable ic_zoom_out
 drawable m3_avd_hide_password
 drawable m3_avd_show_password
 drawable m3_bottom_sheet_drag_handle
@@ -3321,6 +3323,7 @@ id btnDetailClose
 id btnDetailDelete
 id btnGroupDetailClose
 id btnLogin
+id btnLogout
 id btnPickOnMap
 id btnRegister
 id btnSave
@@ -3433,6 +3436,8 @@ id fabAdd
 id fabAddExpense
 id fabCreate
 id fabMyLocation
+id fabZoomIn
+id fabZoomOut
 id fade
 id fill
 id fill_horizontal

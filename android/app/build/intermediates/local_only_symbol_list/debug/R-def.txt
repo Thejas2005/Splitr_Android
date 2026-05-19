@@ -47,6 +47,8 @@ drawable ic_nav_dashboard
 drawable ic_nav_groups
 drawable ic_nav_map
 drawable ic_tab_selector
+drawable ic_zoom_in
+drawable ic_zoom_out
 drawable selector_tab
 drawable selector_tab_bottom
 id bottomNav
@@ -67,6 +69,7 @@ id btnDetailClose
 id btnDetailDelete
 id btnGroupDetailClose
 id btnLogin
+id btnLogout
 id btnPickOnMap
 id btnRegister
 id btnSave
@@ -93,6 +96,8 @@ id fabAdd
 id fabAddExpense
 id fabCreate
 id fabMyLocation
+id fabZoomIn
+id fabZoomOut
 id layoutSplits
 id llBillAssign
 id llBillBtn

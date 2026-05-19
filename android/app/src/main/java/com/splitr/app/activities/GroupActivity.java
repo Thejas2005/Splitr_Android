@@ -1,6 +1,7 @@
 package com.splitr.app.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,9 @@ import com.splitr.app.models.GenericResponse;
 import com.splitr.app.models.Group;
 import com.splitr.app.models.GroupCreate;
 import com.splitr.app.models.GroupMember;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.splitr.app.utils.NetworkUtils;
 import com.splitr.app.utils.SessionManager;
 
 import java.util.ArrayList;
@@ -42,6 +46,8 @@ import retrofit2.Response;
 public class GroupActivity extends AppCompatActivity {
 
     private SessionManager session;
+    private SharedPreferences groupPrefs;
+    private final Gson gson = new Gson();
     private RecyclerView rvGroups;
     private GroupAdapter groupAdapter;
     private FloatingActionButton fabCreate;
@@ -52,7 +58,8 @@ public class GroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group);
 
-        session   = new SessionManager(this);
+        session    = new SessionManager(this);
+        groupPrefs = getSharedPreferences("group_cache_" + session.getUserId(), MODE_PRIVATE);
         rvGroups  = findViewById(R.id.rvGroups);
         fabCreate = findViewById(R.id.fabCreate);
         bottomNav = findViewById(R.id.bottomNav);
@@ -72,13 +79,37 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     private void loadGroups() {
+        // Show cached groups immediately so the screen isn't empty offline
+        restoreCachedGroups();
+
+        if (!NetworkUtils.isOnline(this)) return;
+
         RetrofitClient.getService().getUserGroups(session.getUserId())
                 .enqueue(new Callback<List<Group>>() {
                     @Override public void onResponse(Call<List<Group>> call, Response<List<Group>> resp) {
-                        if (resp.isSuccessful() && resp.body() != null) groupAdapter.setData(resp.body());
+                        if (resp.isSuccessful() && resp.body() != null) {
+                            saveCachedGroups(resp.body());
+                            groupAdapter.setData(resp.body());
+                        }
                     }
-                    @Override public void onFailure(Call<List<Group>> c, Throwable t) { toast("Failed to load groups"); }
+                    @Override public void onFailure(Call<List<Group>> c, Throwable t) {
+                        toast("Offline — showing cached groups");
+                    }
                 });
+    }
+
+    private void saveCachedGroups(List<Group> groups) {
+        groupPrefs.edit()
+                .putString("groups_json", gson.toJson(groups))
+                .apply();
+    }
+
+    private void restoreCachedGroups() {
+        String json = groupPrefs.getString("groups_json", null);
+        if (json == null) return;
+        List<Group> cached = gson.fromJson(json,
+                new TypeToken<List<Group>>(){}.getType());
+        if (cached != null && !cached.isEmpty()) groupAdapter.setData(cached);
     }
 
     // ─── Group click → full group detail bottom sheet ────────────────────────
@@ -199,7 +230,7 @@ public class GroupActivity extends AppCompatActivity {
         RetrofitClient.getService().getMyBalances(session.getUserId())
                 .enqueue(new Callback<com.splitr.app.models.MyBalances>() {
                     @Override public void onResponse(Call<com.splitr.app.models.MyBalances> call,
-                                                      Response<com.splitr.app.models.MyBalances> resp) {
+                                                     Response<com.splitr.app.models.MyBalances> resp) {
                         if (!resp.isSuccessful() || resp.body() == null) return;
                         llBalances.removeAllViews();
                         com.splitr.app.models.MyBalances b = resp.body();
@@ -238,7 +269,7 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     private void addBalanceRow(LinearLayout parent, String party, String desc,
-                                double amount, boolean iOwe, int splitId) {
+                               double amount, boolean iOwe, int splitId) {
         View row = LayoutInflater.from(this).inflate(R.layout.item_balance_row, parent, false);
         TextView tvParty = row.findViewById(R.id.tvBalanceParty);
         TextView tvDesc  = row.findViewById(R.id.tvBalanceDesc);
@@ -267,11 +298,11 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     private void fetchAllUsersAndAddMember(int groupId, String input, EditText etField,
-                                            LinearLayout llMembers, LinearLayout llBalances) {
+                                           LinearLayout llMembers, LinearLayout llBalances) {
         RetrofitClient.getService().getAllUsers()
                 .enqueue(new Callback<List<Map<String, Object>>>() {
                     @Override public void onResponse(Call<List<Map<String, Object>>> call,
-                                                      Response<List<Map<String, Object>>> resp) {
+                                                     Response<List<Map<String, Object>>> resp) {
                         AddMemberRequest req;
                         if (resp.isSuccessful() && resp.body() != null) {
                             Integer uid = null;
@@ -298,7 +329,7 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     private void doAddMember(AddMemberRequest req, String name, EditText etField,
-                               int groupId, LinearLayout llMembers, LinearLayout llBalances) {
+                             int groupId, LinearLayout llMembers, LinearLayout llBalances) {
         RetrofitClient.getService().addMember(req).enqueue(new Callback<GenericResponse>() {
             @Override public void onResponse(Call<GenericResponse> call, Response<GenericResponse> resp) {
                 if (resp.isSuccessful()) {
@@ -340,7 +371,7 @@ public class GroupActivity extends AppCompatActivity {
         RetrofitClient.getService().createGroup(new GroupCreate(name, session.getUserId()))
                 .enqueue(new Callback<FindOrCreateGroupResponse>() {
                     @Override public void onResponse(Call<FindOrCreateGroupResponse> call, Response<FindOrCreateGroupResponse> resp) {
-                        if (resp.isSuccessful()) { toast("Group \"" + name + "\" created"); loadGroups(); }
+                        if (resp.isSuccessful()) { toast("Group \"" + name + "\" created"); loadGroups(); } // loadGroups() refreshes + re-caches
                         else toast("Failed to create group");
                     }
                     @Override public void onFailure(Call<FindOrCreateGroupResponse> c, Throwable t) { toast("Network error"); }

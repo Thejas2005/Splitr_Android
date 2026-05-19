@@ -72,13 +72,17 @@
         android:text="Assign to:"
         android:textColor="@color/muted"
         android:textSize="11sp"
-        android:layout_marginBottom="4dp"/>
+        android:layout_marginBottom="6dp"/>
 
-    <!-- FIXED -->
-    <LinearLayout
+    <!-- FlexboxLayout wraps chips onto new lines instead of squishing them -->
+    <com.google.android.flexbox.FlexboxLayout
         android:id="@+id/llBillAssign"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"/>
+        app:flexWrap="wrap"
+        app:flexDirection="row"
+        app:alignItems="flex_start"
+        app:justifyContent="flex_start"
+        xmlns:app="http://schemas.android.com/apk/res-auto"/>
 
 </LinearLayout>

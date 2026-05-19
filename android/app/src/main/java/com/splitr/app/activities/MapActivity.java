@@ -10,6 +10,8 @@ import android.graphics.Paint;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -17,8 +19,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,8 +38,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -52,48 +56,87 @@ import com.splitr.app.utils.ExpenseClusterer;
 import com.splitr.app.utils.MarkerClusterGroup;
 import com.splitr.app.utils.SessionManager;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int LOCATION_PERMISSION_REQUEST = 1001;
 
+    // Your existing Maps API key from AndroidManifest.xml
+    private static final String PLACES_API_KEY = "AIzaSyBd3gQ7AzQpYQQDvpGYNuD-ux-pTJr1Qlo";
+
+    // Below this zoom level all expenses merge into one growing bubble
+    private static final float ZOOM_CLUSTER = 15f;
+
     private GoogleMap gMap;
     private FusedLocationProviderClient fusedLocation;
     private SessionManager session;
 
-    private EditText etPlaceSearch;
+    private AutoCompleteTextView etPlaceSearch;
     private Button btnClearSearch;
-    private FloatingActionButton fabAddExpense, fabMyLocation;
+    private FloatingActionButton fabAddExpense, fabMyLocation, fabZoomIn, fabZoomOut;
     private BottomNavigationView bottomNav;
 
-    // For tapped-pin add expense
+    // Autocomplete
+    private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private Runnable searchRunnable;
+    private ArrayAdapter<String> suggestionAdapter;
+
+    // Map from suggestion label → placeId for navigation after selection
+    private final java.util.Map<String, String> placeIdMap = new java.util.LinkedHashMap<>();
+
+    private final OkHttpClient httpClient = new OkHttpClient();
+
+    // Pending pin
     private LatLng pendingLat = null;
     private Marker pendingMarker = null;
 
-    // Current user location
+    // Search result marker (persists across zoom re-renders)
+    private Marker searchMarker = null;
+    // Opaque circle drawn over the blue dot when an expense cluster sits on current location
+    private Circle locationCoverCircle = null;
+    // Suppresses zoom re-render while a search navigation is animating
+    private boolean suppressZoomRender = false;
+
+    // Current location
     private LatLng currentLocation = null;
+
+    // Cached expenses
+    private List<LocationExpense> cachedExpenses = new ArrayList<>();
+    private float lastRenderedZoom = -1f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        session      = new SessionManager(this);
+        session       = new SessionManager(this);
         fusedLocation = LocationServices.getFusedLocationProviderClient(this);
 
         etPlaceSearch  = findViewById(R.id.etPlaceSearch);
         btnClearSearch = findViewById(R.id.btnClearSearch);
         fabAddExpense  = findViewById(R.id.fabAddExpense);
         fabMyLocation  = findViewById(R.id.fabMyLocation);
+        fabZoomIn      = findViewById(R.id.fabZoomIn);
+        fabZoomOut     = findViewById(R.id.fabZoomOut);
         bottomNav      = findViewById(R.id.bottomNav);
+
+        suggestionAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, new ArrayList<>());
+        etPlaceSearch.setAdapter(suggestionAdapter);
+        etPlaceSearch.setThreshold(1); // show after 1 char
 
         SupportMapFragment mapFrag = (SupportMapFragment)
                 getSupportFragmentManager().findFragmentById(R.id.mapFragment);
@@ -110,15 +153,17 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public void onMapReady(@NonNull GoogleMap googleMap) {
         gMap = googleMap;
 
-        // Dark style
         try {
             gMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.map_style_dark));
         } catch (Exception ignored) {}
 
         gMap.getUiSettings().setMyLocationButtonEnabled(false);
         gMap.getUiSettings().setZoomControlsEnabled(false);
+        gMap.getUiSettings().setZoomGesturesEnabled(true);
+        gMap.getUiSettings().setScrollGesturesEnabled(true);
+        gMap.getUiSettings().setTiltGesturesEnabled(true);
+        gMap.getUiSettings().setRotateGesturesEnabled(true);
 
-        // Tap on map → set pending location for new expense
         gMap.setOnMapClickListener(latLng -> {
             if (pendingMarker != null) pendingMarker.remove();
             pendingLat = latLng;
@@ -127,6 +172,19 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     .title("New expense here")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
             Toast.makeText(this, "Tap ＋ to add expense here", Toast.LENGTH_SHORT).show();
+        });
+
+        gMap.setOnCameraIdleListener(() -> {
+            if (suppressZoomRender) {
+                suppressZoomRender = false; // reset after the search animation settles
+                lastRenderedZoom = gMap.getCameraPosition().zoom;
+                return;
+            }
+            float zoom = gMap.getCameraPosition().zoom;
+            if (Math.abs(zoom - lastRenderedZoom) > 0.5f && !cachedExpenses.isEmpty()) {
+                lastRenderedZoom = zoom;
+                renderExpenses(cachedExpenses);
+            }
         });
 
         requestLocationAndLoad();
@@ -147,9 +205,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void enableMyLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) return;
-
         gMap.setMyLocationEnabled(true);
-
         fusedLocation.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
@@ -158,7 +214,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-    // ─── Load and render expenses ─────────────────────────────────────────────
+    // ─── Load & render ────────────────────────────────────────────────────────
 
     private void loadExpenses() {
         RetrofitClient.getService()
@@ -166,9 +222,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 .enqueue(new Callback<List<LocationExpense>>() {
                     @Override
                     public void onResponse(Call<List<LocationExpense>> call,
-                                           Response<List<LocationExpense>> resp) {
+                                           retrofit2.Response<List<LocationExpense>> resp) {
                         if (resp.isSuccessful() && resp.body() != null) {
-                            renderExpenses(resp.body());
+                            cachedExpenses = resp.body();
+                            lastRenderedZoom = gMap != null ? gMap.getCameraPosition().zoom : 14f;
+                            renderExpenses(cachedExpenses);
                         }
                     }
                     @Override
@@ -181,32 +239,66 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private void renderExpenses(List<LocationExpense> expenses) {
         if (gMap == null) return;
+        // Save search marker state before clear
+        LatLng searchPos = searchMarker != null ? searchMarker.getPosition() : null;
+        String searchTitle = searchMarker != null ? searchMarker.getTitle() : null;
         gMap.clear();
         if (pendingMarker != null) pendingMarker = null;
+        searchMarker = null;
+        // Re-add search marker if one existed
+        if (searchPos != null) {
+            searchMarker = gMap.addMarker(new MarkerOptions()
+                    .position(searchPos)
+                    .title(searchTitle)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+        }
 
-        // Re-add user blue dot (cleared by gMap.clear())
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             gMap.setMyLocationEnabled(true);
         }
 
-        // Draw heat circle around current location
-        if (currentLocation != null && !expenses.isEmpty()) {
-            drawHeatCircle(expenses);
-        }
-
-        // Cluster nearby expenses (~100m radius)
-        List<MarkerClusterGroup> clusters = ExpenseClusterer.cluster(expenses);
+        float zoom = gMap.getCameraPosition().zoom;
+        List<MarkerClusterGroup> clusters = ExpenseClusterer.cluster(expenses, zoom);
 
         for (MarkerClusterGroup cluster : clusters) {
             LatLng pos = new LatLng(cluster.centerLat, cluster.centerLng);
-            BitmapDescriptor icon = makeMarkerIcon(cluster);
 
+            BitmapDescriptor icon = makeMarkerIcon(cluster, zoom);
+            // zIndex > 1 renders above the native My Location blue dot
             Marker m = gMap.addMarker(new MarkerOptions()
-                    .position(pos)
-                    .icon(icon)
-                    .anchor(0.5f, 0.5f));
+                    .position(pos).icon(icon).anchor(0.5f, 0.5f).zIndex(10f));
             if (m != null) m.setTag(cluster);
+        }
+
+        // Draw opaque cover circle over the blue My Location dot
+        // if the user's location coincides with an expense cluster.
+        if (locationCoverCircle != null) {
+            locationCoverCircle.remove();
+            locationCoverCircle = null;
+        }
+        if (currentLocation != null) {
+            // Find the cluster closest to current location
+            MarkerClusterGroup nearest = null;
+            double minDist = Double.MAX_VALUE;
+            for (MarkerClusterGroup cl : clusters) {
+                double d = ExpenseClusterer.haversineMeters(
+                        currentLocation.latitude, currentLocation.longitude,
+                        cl.centerLat, cl.centerLng);
+                if (d < minDist) { minDist = d; nearest = cl; }
+            }
+            // Cover the dot only if a cluster is within 80m (the dot's visual footprint)
+            if (nearest != null && minDist < 80) {
+                // Circle radius in metres — small enough to only cover the dot, not the bubble
+                // Gets slightly larger at low zoom so the bleed around the bitmap marker is hidden
+                double coverRadius = Math.max(8, Math.min(40, (ZOOM_CLUSTER - zoom) * 3 + 8));
+                locationCoverCircle = gMap.addCircle(new CircleOptions()
+                        .center(new LatLng(nearest.centerLat, nearest.centerLng))
+                        .radius(coverRadius)
+                        .fillColor(solidHeatColor(nearest.heatRatio(), nearest.myAmount))
+                        .strokeWidth(0f)
+                        .zIndex(100f)); // above everything including the blue dot layer
+            }
         }
 
         gMap.setOnMarkerClickListener(marker -> {
@@ -217,43 +309,21 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         });
     }
 
-    /**
-     * Draws a translucent heat circle around the user's current location,
-     * sized to roughly encompass the visible expense area.
-     * Shows zoomed-out heat even when individual markers are clustered.
-     */
-    private void drawHeatCircle(List<LocationExpense> expenses) {
-        // Calculate user's total spend in this area
-        double myTotal = 0, grandTotal = 0;
-        for (LocationExpense e : expenses) {
-            grandTotal += e.amount;
-            myTotal    += e.myAmount;
-        }
-        double ratio = grandTotal > 0 ? myTotal / grandTotal : 0;
 
-        // Color based on spend ratio
-        int color;
-        if (ratio <= 0)       color = Color.argb(40, 59, 130, 246);   // blue
-        else if (ratio < 0.33) color = Color.argb(50, 239, 68, 68);   // red
-        else if (ratio < 0.66) color = Color.argb(50, 249, 115, 22);  // orange
-        else                   color = Color.argb(50, 168, 85, 247);  // purple
+    private BitmapDescriptor makeMarkerIcon(MarkerClusterGroup cluster, float zoom) {
+        int count = cluster.expenses.size();
+        boolean isCluster = count > 1;
 
-        int strokeColor;
-        if (ratio <= 0)       strokeColor = Color.argb(120, 59, 130, 246);
-        else if (ratio < 0.33) strokeColor = Color.argb(120, 239, 68, 68);
-        else if (ratio < 0.66) strokeColor = Color.argb(120, 249, 115, 22);
-        else                   strokeColor = Color.argb(120, 168, 85, 247);
+        // Single pin = 90px. Clusters grow log-scale with count,
+        // plus a small zoom-out boost so they stay visible when merged.
+        int base = isCluster
+                ? Math.min(180, 90 + (int)(Math.log(count + 1) / Math.log(2) * 22))
+                : 90;
+        int zoomBoost = isCluster
+                ? (int) Math.min(40, Math.max(0, (ZOOM_CLUSTER - zoom) * 3f))
+                : 0;
+        int size = base + zoomBoost;
 
-        gMap.addCircle(new CircleOptions()
-                .center(currentLocation)
-                .radius(500)   // 500m radius heat zone
-                .fillColor(color)
-                .strokeColor(strokeColor)
-                .strokeWidth(2f));
-    }
-
-    private BitmapDescriptor makeMarkerIcon(MarkerClusterGroup cluster) {
-        int size = cluster.expenses.size() > 1 ? 120 : 90;
         Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bmp);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -262,15 +332,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         paint.setColor(Color.argb(60, 0, 0, 0));
         canvas.drawCircle(size / 2f + 3, size / 2f + 3, size / 2f - 6, paint);
 
-        // Fill based on my spend ratio
-        double ratio = cluster.totalAmount > 0
-                ? cluster.myAmount / cluster.totalAmount : 0;
-
-        if (cluster.myAmount <= 0)      paint.setColor(Color.rgb(59, 130, 246));   // blue
-        else if (ratio < 0.33)          paint.setColor(Color.rgb(239, 68, 68));    // red
-        else if (ratio < 0.66)          paint.setColor(Color.rgb(249, 115, 22));   // orange
-        else                            paint.setColor(Color.rgb(168, 85, 247));   // purple
-
+        // Fill colour based on spend ratio
+        paint.setColor(solidHeatColor(cluster.heatRatio(), cluster.myAmount));
         canvas.drawCircle(size / 2f, size / 2f, size / 2f - 6, paint);
 
         // White border
@@ -280,18 +343,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         canvas.drawCircle(size / 2f, size / 2f, size / 2f - 6, paint);
         paint.setStyle(Paint.Style.FILL);
 
-        // Label
-        String label = cluster.expenses.size() > 1
-                ? "₹" + formatAmount(cluster.totalAmount)
-                : "₹" + formatAmount(cluster.totalAmount);
+        // Amount text — shift up if cluster to make room for count
+        String label = "₹" + formatAmount(cluster.totalAmount);
         paint.setColor(Color.WHITE);
-        paint.setTextSize(size > 100 ? 22f : 18f);
+        paint.setTextSize(size > 130 ? 24f : size > 100 ? 20f : 16f);
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setFakeBoldText(true);
         float textY = size / 2f - ((paint.descent() + paint.ascent()) / 2f);
+        if (isCluster) textY -= 10f;
         canvas.drawText(label, size / 2f, textY, paint);
 
+        // Count below amount
+        if (isCluster) {
+            paint.setTextSize(size > 130 ? 14f : 12f);
+            paint.setFakeBoldText(false);
+            paint.setColor(Color.argb(210, 255, 255, 255));
+            canvas.drawText(count + " expenses", size / 2f, textY + (size > 130 ? 20f : 17f), paint);
+        }
+
         return BitmapDescriptorFactory.fromBitmap(bmp);
+    }
+
+    private int solidHeatColor(double ratio, double myAmount) {
+        if (myAmount <= 0) return Color.rgb(59, 130, 246);
+        if (ratio < 0.33)  return Color.rgb(239, 68, 68);
+        if (ratio < 0.66)  return Color.rgb(249, 115, 22);
+        return Color.rgb(168, 85, 247);
     }
 
     private String formatAmount(double amount) {
@@ -307,34 +384,70 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         View v = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_cluster, null);
         sheet.setContentView(v);
 
-        TextView tvTotal  = v.findViewById(R.id.tvClusterTotal);
-        TextView tvMine = v.findViewById(R.id.tvClusterTotal); // use existing view
-        RecyclerView rv   = v.findViewById(R.id.rvClusterExpenses);
+        TextView tvTotal   = v.findViewById(R.id.tvTotal);
+        TextView tvMySpend = v.findViewById(R.id.tvMySpend);
+        TextView tvCount   = v.findViewById(R.id.tvCount);
+        RecyclerView rv    = v.findViewById(R.id.rvClusterExpenses);
+        Button btnAddHere  = v.findViewById(R.id.btnAddHere);
 
-        tvTotal.setText("Total: ₹" + String.format(Locale.getDefault(), "%.2f", cluster.totalAmount));
-        tvMine.setText("Your share: ₹" + String.format(Locale.getDefault(), "%.2f", cluster.myAmount));
+        tvTotal.setText("₹" + String.format(Locale.getDefault(), "%.2f", cluster.totalAmount));
+        tvMySpend.setText("Your spend: ₹" + String.format(Locale.getDefault(), "%.2f", cluster.myAmount));
+        int n = cluster.expenses.size();
+        tvCount.setText(n + " expense" + (n == 1 ? "" : "s"));
 
         rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setAdapter(new LocationExpenseAdapter(cluster.expenses, session.getUserId()));
 
+        if (btnAddHere != null) {
+            btnAddHere.setOnClickListener(vv -> {
+                sheet.dismiss();
+                AddExpenseActivity.launch(this, cluster.centerLat, cluster.centerLng);
+            });
+        }
         sheet.show();
     }
 
-    // ─── Place Search ─────────────────────────────────────────────────────────
+    // ─── Place Search — Google Places Autocomplete ────────────────────────────
 
     private void setupSearchBar() {
         etPlaceSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
             @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
                 btnClearSearch.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                if (searchRunnable != null) searchHandler.removeCallbacks(searchRunnable);
+                String query = s.toString().trim();
+                if (query.length() >= 1) {
+                    // Debounce 300 ms — fast enough for typeahead feel
+                    searchRunnable = () -> fetchAutocompleteSuggestions(query);
+                    searchHandler.postDelayed(searchRunnable, 300);
+                } else {
+                    suggestionAdapter.clear();
+                    suggestionAdapter.notifyDataSetChanged();
+                }
             }
             @Override public void afterTextChanged(Editable s) {}
+        });
+
+        etPlaceSearch.setOnItemClickListener((parent, view, position, id) -> {
+            String selected = (String) parent.getItemAtPosition(position);
+            String placeId  = placeIdMap.get(selected);
+            etPlaceSearch.setText(selected);
+            hideKeyboard();
+            if (placeId != null) {
+                navigateToPlaceId(placeId);
+            } else {
+                searchPlaceByName(selected);
+            }
         });
 
         etPlaceSearch.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH
                     || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-                searchPlace(etPlaceSearch.getText().toString().trim());
+                String query = etPlaceSearch.getText().toString().trim();
+                // If there's an exact match in our map use it, otherwise geocode
+                String placeId = placeIdMap.get(query);
+                if (placeId != null) navigateToPlaceId(placeId);
+                else searchPlaceByName(query);
                 hideKeyboard();
                 return true;
             }
@@ -344,10 +457,117 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         btnClearSearch.setOnClickListener(v -> {
             etPlaceSearch.setText("");
             btnClearSearch.setVisibility(View.GONE);
+            suggestionAdapter.clear();
+            suggestionAdapter.notifyDataSetChanged();
+            placeIdMap.clear();
         });
     }
 
-    private void searchPlace(String query) {
+    /**
+     * Calls the Places Autocomplete API using the Maps API key already in the manifest.
+     * Returns up to 5 suggestions as the user types.
+     */
+    private void fetchAutocompleteSuggestions(String input) {
+        new Thread(() -> {
+            try {
+                // Bias results toward user's current location if available
+                String locationBias = "";
+                if (currentLocation != null) {
+                    locationBias = "&location=" + currentLocation.latitude
+                            + "," + currentLocation.longitude + "&radius=50000";
+                }
+
+                String url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+                        + "?input=" + URLEncoder.encode(input, "UTF-8")
+                        + "&key=" + PLACES_API_KEY
+                        + "&language=en"
+                        + locationBias;
+
+                Request request = new Request.Builder().url(url).build();
+                try (okhttp3.Response response = httpClient.newCall(request).execute()) {
+                    if (!response.isSuccessful() || response.body() == null) return;
+
+                    String body = response.body().string();
+                    JSONObject json = new JSONObject(body);
+                    JSONArray predictions = json.optJSONArray("predictions");
+                    if (predictions == null) return;
+
+                    List<String> labels = new ArrayList<>();
+                    java.util.Map<String, String> newMap = new java.util.LinkedHashMap<>();
+
+                    for (int i = 0; i < Math.min(predictions.length(), 5); i++) {
+                        JSONObject pred = predictions.getJSONObject(i);
+                        String description = pred.optString("description", "");
+                        String placeId     = pred.optString("place_id", "");
+                        if (!description.isEmpty()) {
+                            labels.add(description);
+                            if (!placeId.isEmpty()) newMap.put(description, placeId);
+                        }
+                    }
+
+                    runOnUiThread(() -> {
+                        placeIdMap.clear();
+                        placeIdMap.putAll(newMap);
+                        suggestionAdapter.clear();
+                        suggestionAdapter.addAll(labels);
+                        suggestionAdapter.notifyDataSetChanged();
+                        if (!labels.isEmpty()) etPlaceSearch.showDropDown();
+                    });
+                }
+            } catch (Exception e) {
+                // Silently fail — user can still press search
+            }
+        }).start();
+    }
+
+    /**
+     * Once user picks a suggestion we have its placeId.
+     * Use Place Details API to get the exact lat/lng and navigate there.
+     */
+    private void navigateToPlaceId(String placeId) {
+        new Thread(() -> {
+            try {
+                String url = "https://maps.googleapis.com/maps/api/place/details/json"
+                        + "?place_id=" + placeId
+                        + "&fields=geometry,name"
+                        + "&key=" + PLACES_API_KEY;
+
+                Request request = new Request.Builder().url(url).build();
+                try (okhttp3.Response response = httpClient.newCall(request).execute()) {
+                    if (!response.isSuccessful() || response.body() == null) return;
+
+                    String body = response.body().string();
+                    JSONObject json  = new JSONObject(body);
+                    JSONObject result = json.optJSONObject("result");
+                    if (result == null) return;
+
+                    JSONObject location = result
+                            .getJSONObject("geometry")
+                            .getJSONObject("location");
+                    double lat = location.getDouble("lat");
+                    double lng = location.getDouble("lng");
+                    String name = result.optString("name", "");
+
+                    runOnUiThread(() -> {
+                        LatLng target = new LatLng(lat, lng);
+                        suppressZoomRender = true;
+                        if (searchMarker != null) searchMarker.remove();
+                        searchMarker = gMap.addMarker(new MarkerOptions()
+                                .position(target)
+                                .title(name.isEmpty() ? etPlaceSearch.getText().toString() : name)
+                                .icon(BitmapDescriptorFactory.defaultMarker(
+                                        BitmapDescriptorFactory.HUE_RED)));
+                        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(target, 16f));
+                    });
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Navigation failed", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    /** Fallback geocoder if no placeId available */
+    private void searchPlaceByName(String query) {
         if (query.isEmpty()) return;
         new Thread(() -> {
             try {
@@ -357,29 +577,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     Address addr = results.get(0);
                     LatLng target = new LatLng(addr.getLatitude(), addr.getLongitude());
                     runOnUiThread(() -> {
-                        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(target, 15f));
-                        // Drop a temporary search pin
-                        gMap.addMarker(new MarkerOptions()
+                        suppressZoomRender = true;
+                        if (searchMarker != null) searchMarker.remove();
+                        searchMarker = gMap.addMarker(new MarkerOptions()
                                 .position(target)
-                                .title(addr.getFeatureName() != null
-                                        ? addr.getFeatureName() : query)
+                                .title(addr.getFeatureName() != null ? addr.getFeatureName() : query)
                                 .icon(BitmapDescriptorFactory.defaultMarker(
-                                        BitmapDescriptorFactory.HUE_CYAN)));
+                                        BitmapDescriptorFactory.HUE_RED)));
+                        gMap.animateCamera(CameraUpdateFactory.newLatLngZoom(target, 15f));
                     });
                 } else {
-                    runOnUiThread(() -> Toast.makeText(this,
-                            "Place not found", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> Toast.makeText(this, "Place not found", Toast.LENGTH_SHORT).show());
                 }
             } catch (IOException e) {
-                runOnUiThread(() -> Toast.makeText(this,
-                        "Search failed", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> Toast.makeText(this, "Search failed", Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
 
     private void hideKeyboard() {
-        InputMethodManager imm = (InputMethodManager)
-                getSystemService(INPUT_METHOD_SERVICE);
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         if (imm != null) imm.hideSoftInputFromWindow(etPlaceSearch.getWindowToken(), 0);
     }
 
@@ -390,8 +607,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             if (pendingLat != null) {
                 AddExpenseActivity.launch(this, pendingLat.latitude, pendingLat.longitude);
             } else if (currentLocation != null) {
-                AddExpenseActivity.launch(this,
-                        currentLocation.latitude, currentLocation.longitude);
+                AddExpenseActivity.launch(this, currentLocation.latitude, currentLocation.longitude);
             } else {
                 AddExpenseActivity.launch(this, null, null);
             }
@@ -403,6 +619,14 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             } else {
                 requestLocationAndLoad();
             }
+        });
+
+        fabZoomIn.setOnClickListener(v -> {
+            if (gMap != null) gMap.animateCamera(CameraUpdateFactory.zoomIn());
+        });
+
+        fabZoomOut.setOnClickListener(v -> {
+            if (gMap != null) gMap.animateCamera(CameraUpdateFactory.zoomOut());
         });
     }
 

@@ -66,7 +66,7 @@
 
     <Button android:id="@+id/btnGroupDetailClose"
         android:layout_width="match_parent" android:layout_height="48dp"
-        android:text="Close" android:textColor="@color/muted"
+        android:text="Close" android:textColor="@color/white"
         android:background="@drawable/bg_btn_secondary"
         android:stateListAnimator="@null"/>
   </LinearLayout>
